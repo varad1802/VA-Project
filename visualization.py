@@ -6,15 +6,38 @@ from pycaret.regression import *
 # load model
 @st.cache 
 def predict_cache(test_data):
-    rf_saved = load_model('rf_model1')
+    rf_saved = load_model('rf_model')
     predictions = predict_model(rf_saved, data = test_data)
     return predictions['Label']
 
 # load data
-@st.cache 
 def load_data():
     data = pd.read_csv('./data/Train_Data.csv')
     return data
+
+def preprocess_inputs(df):
+    
+    df = df.copy()
+    sex_wrapper = {'male':0, 'female':1}
+    df.sex = df.sex.replace(sex_wrapper)
+
+    df.smoker.value_counts()
+    smoker_wrapper = {'no':0, 'yes':1}
+    df.smoker = df.smoker.replace(smoker_wrapper)
+    
+    df = pd.get_dummies(df, columns=['region'])
+    
+    return df
+
+def addMissingColumns(df):
+    if 'region_northeast' not in df:
+        df['region_northeast'] = 0
+    if 'region_northwest' not in df:
+        df['region_northwest'] = 0
+    if 'region_southeast' not in df:
+        df['region_southeast'] = 0
+    if 'region_southwest' not in df:
+        df['region_southwest'] = 0
 
 st.set_page_config(layout="wide")
 
@@ -38,7 +61,7 @@ st.markdown("""
 st.title('Medical Insurance cost Prediction')
 
 
-data = load_data()
+data = load_data().copy()
 
 prediction, visualization = st.tabs(['Prediction', 'Visualizations'])
 
@@ -52,16 +75,20 @@ with prediction:
         bmi = col1.slider('BMI', 15.0, 54.0, 21.0, step=0.1)
         children = col1.slider('Children', 0, 5, 0, step=1)
 
-        button  = col1.button("Predict")
+        #button  = col1.button("Predict")
 
     with col2:
-        if button:
+        #if button:
             entry = pd.DataFrame({'age': [age], 
                                     'sex': [sex], 
                                     'bmi': [bmi], 
                                     'children' : [children], 
                                     'smoker': [smoker], 
                                     'region': [region]})
+
+            entry = preprocess_inputs(entry)
+            addMissingColumns(entry)
+            pred = round(predict_cache(entry)[0], 4)
 
             hist = alt.Chart().mark_bar().encode(
                 x=alt.X('charges:Q', bin=alt.Bin(extent=[0, 50000], step=1000), title='Insurance Charges'),
@@ -83,8 +110,6 @@ with prediction:
                 tooltip=[alt.Tooltip('pred:Q', title='Your Insurance Charge')]
             )
 
-            pred = predict_cache(entry)[0]
-
             html_str = f"""
                     <h2 style='text-align: center; color: #FF4B4B;'>Insurance charges = ${pred} </h2>
                 """
@@ -105,9 +130,9 @@ with prediction:
             )
 
             col2.write(pot)
-        else:
-            col2.subheader('Press the predict button to view the predicted insurance cost and more!')
-            col2.image('./images/healthInsurance.jpeg')
+        #else:
+        #    col2.subheader('Press the predict button to view the predicted insurance cost and more!')
+        #    col2.image('./images/healthInsurance.jpeg')
 
 with visualization:
     col1, col2 = st.columns(2)
