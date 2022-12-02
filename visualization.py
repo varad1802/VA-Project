@@ -75,10 +75,10 @@ with prediction:
         bmi = col1.slider('BMI', 15.0, 54.0, 21.0, step=0.1)
         children = col1.slider('Children', 0, 5, 0, step=1)
 
-        #button  = col1.button("Predict")
+        button  = col1.button("Predict")
 
     with col2:
-        #if button:
+        if button:
             entry = pd.DataFrame({'age': [age], 
                                     'sex': [sex], 
                                     'bmi': [bmi], 
@@ -130,9 +130,9 @@ with prediction:
             )
 
             col2.write(pot)
-        #else:
-        #    col2.subheader('Press the predict button to view the predicted insurance cost and more!')
-        #    col2.image('./images/healthInsurance.jpeg')
+        else:
+            col2.subheader('Press the predict button to view the predicted insurance cost and more!')
+            col2.image('./images/healthInsurance.jpeg')
 
 with visualization:
     col1, col2 = st.columns(2)
